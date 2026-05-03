@@ -1,14 +1,17 @@
 import { google } from 'googleapis'
 import { createServiceClient } from './supabase/server'
 
-const oauth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  `${process.env.NEXTAUTH_URL ?? 'http://localhost:3000'}/api/auth/google/callback`
-)
+function createOAuthClient() {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  return new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    `${appUrl}/api/auth/google/callback`
+  )
+}
 
 export function getAuthUrl(clientId: string): string {
-  return oauth2Client.generateAuthUrl({
+  return createOAuthClient().generateAuthUrl({
     access_type: 'offline',
     prompt: 'consent',
     scope: [
@@ -19,7 +22,7 @@ export function getAuthUrl(clientId: string): string {
 }
 
 export async function exchangeCodeForTokens(code: string) {
-  const { tokens } = await oauth2Client.getToken(code)
+  const { tokens } = await createOAuthClient().getToken(code)
   return tokens
 }
 
@@ -28,12 +31,14 @@ async function getAuthenticatedClient(
   refreshToken: string,
   clientDbId: string
 ) {
-  oauth2Client.setCredentials({
+  const client = createOAuthClient()
+
+  client.setCredentials({
     access_token: accessToken,
     refresh_token: refreshToken,
   })
 
-  oauth2Client.on('tokens', async (tokens) => {
+  client.on('tokens', async (tokens) => {
     if (tokens.access_token) {
       const supabase = createServiceClient()
       await supabase
@@ -43,7 +48,7 @@ async function getAuthenticatedClient(
     }
   })
 
-  return oauth2Client
+  return client
 }
 
 export interface GoogleReview {

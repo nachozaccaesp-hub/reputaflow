@@ -37,3 +37,6 @@ next-env.d.ts
 
 # brief con credenciales — nunca commitear
 ../reputaflow_brief_claudecode.md
+
+.vercel
+.env*.local
