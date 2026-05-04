@@ -6,7 +6,7 @@ function createOAuthClient() {
   return new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    `${appUrl}/api/auth/google/callback`
+    `${appUrl}/api/auth/callback/google`
   )
 }
 
